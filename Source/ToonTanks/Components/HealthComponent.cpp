@@ -11,8 +11,6 @@ UHealthComponent::UHealthComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
 }
 
 
@@ -33,7 +31,11 @@ void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const UDam
 		return;
 	}
 
+	// DEBUG LINE
+	// UE_LOG(LogTemp, Warning, TEXT("%s Health before hit: %f"), *GetOwner()->GetFName().ToString(), Health);
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
+	// DEBUG LINE
+	// UE_LOG(LogTemp, Warning, TEXT("%s Health after hit: %f"), *GetOwner()->GetFName().ToString(), Health);
 
 	if (Health <= 0)
 	{
