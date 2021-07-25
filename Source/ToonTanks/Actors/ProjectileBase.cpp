@@ -4,6 +4,9 @@
 #include "ProjectileBase.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+
 
 // Sets default values
 AProjectileBase::AProjectileBase()
@@ -12,19 +15,40 @@ AProjectileBase::AProjectileBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Projectile Mesh"));
+	
 	RootComponent = ProjectileMesh;
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement"));
+	ProjectileMovement->InitialSpeed = MovementSpeed;
+	ProjectileMovement->MaxSpeed = MovementSpeed;
+	InitialLifeSpan = 3.0f;
 }
 
 // Called when the game starts or when spawned
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
+	ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectileBase::OnHit);
 	
-	ProjectileMovement->InitialSpeed = MovementSpeed;
-	ProjectileMovement->MaxSpeed = MovementSpeed;
-	InitialLifeSpan = 3.0f;
 }
 
+void AProjectileBase::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnHit success!"));
+	// Try to get a reference to the owning class.
+	AActor* MyOwner = GetOwner();
+	// If for some reason we can't get a valid reference, return as we need to check against the owner.
+	if (!MyOwner) 
+	{
+		return;
+	}
+	// If the other actor ISN'T self OR Owner AND exists, then apply damage.
+	if (OtherActor && OtherActor != this && OtherActor != MyOwner)
+	{
+		UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwner->GetInstigatorController(), this, DamageType);
+	}
 
+	// Play a bunch of effects here during the polish phase. - TODO
+
+	Destroy();
+}
